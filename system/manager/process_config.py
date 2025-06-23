@@ -31,10 +31,12 @@ def ublox(started: bool, params: Params, CP: car.CarParams) -> bool:
   return started and use_ublox
 
 def joystick(started: bool, params: Params, CP: car.CarParams) -> bool:
-  return started and params.get_bool("JoystickDebugMode")
+  #return started and params.get_bool("JoystickDebugMode")
+  return True
 
 def not_joystick(started: bool, params: Params, CP: car.CarParams) -> bool:
-  return started and not params.get_bool("JoystickDebugMode")
+  #return started and not params.get_bool("JoystickDebugMode")
+  return False
 
 def long_maneuver(started: bool, params: Params, CP: car.CarParams) -> bool:
   return started and params.get_bool("LongitudinalManeuverMode")
