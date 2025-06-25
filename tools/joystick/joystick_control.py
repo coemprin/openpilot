@@ -133,7 +133,7 @@ if __name__ == '__main__':
     exit()
 
   print()
-  if args.keyboard:
+  if True: #args.keyboard:
     print('Gas/brake control: `W` and `S` keys')
     print('Steering control: `A` and `D` keys')
     print('Buttons')
@@ -143,5 +143,5 @@ if __name__ == '__main__':
     print('Using joystick, make sure to run cereal/messaging/bridge on your device if running over the network!')
     print('If not running on a comma device, the mapping may need to be adjusted.')
 
-  joystick = Keyboard() if args.keyboard else Joystick()
+  joystick = Keyboard() #if args.keyboard else Joystick()
   joystick_control_thread(joystick)
