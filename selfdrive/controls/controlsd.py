@@ -24,6 +24,8 @@ State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
 LaneChangeDirection = log.LaneChangeDirection
 
+existing_file = True
+
 RT, LT, LX = 0.0, 0.0, 0.0
 accelReceiver, steerReceiver = 0, 0
 
@@ -115,8 +117,24 @@ class Controls:
     LT = self.sm['testJoystick'].lT
     RT = self.sm['testJoystick'].rT
 
-    print(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}")
-    print(f"LX = {LX}, LT = {LT}, RT = {RT}\n")
+    global existing_file
+
+    if existing_file:
+      try:
+        with open("/data/media/0/log_from_controlsd.txt", 'a') as f:
+          f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}")
+          f.write(f"LX = {LX}, LT = {LT}, RT = {RT}\n")
+
+      except FileNotFoundError:
+          print("\nErreur : le fichier ou le dossier n'existe pas.\n")
+          existing_file = False
+      except PermissionError:
+          print("\nErreur : permission refusée pour écrire dans ce fichier.\n")
+          existing_file = False
+      except Exception as e:
+          print(f"\nUne erreur est survenue : {e}\n")
+          existing_file = False
+
 
     # accel PID loop
     if not accelReceiver :
