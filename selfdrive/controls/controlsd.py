@@ -18,11 +18,14 @@ from openpilot.selfdrive.controls.lib.latcontrol_torque import LatControlTorque
 from openpilot.selfdrive.controls.lib.longcontrol import LongControl
 from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
-from openpilot.selfdrive.controls.receiver import accelReceiver, steerReceiver, RT, LT, LX
+#from openpilot.selfdrive.controls.port_receiver import update_joystick
 
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
 LaneChangeDirection = log.LaneChangeDirection
+
+RT, LT, LX = 0.0, 0.0, 0.0
+accelReceiver, steerReceiver = 0, 0
 
 ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 
@@ -37,7 +40,7 @@ class Controls:
 
     self.sm = messaging.SubMaster(['liveParameters', 'liveTorqueParameters', 'modelV2', 'selfdriveState',
                                    'liveCalibration', 'livePose', 'longitudinalPlan', 'carState', 'carOutput',
-                                   'driverMonitoringState', 'onroadEvents', 'driverAssistance'], poll='selfdriveState')
+                                   'driverMonitoringState', 'onroadEvents', 'driverAssistance','testJoystick'], poll='selfdriveState')
     self.pm = messaging.PubMaster(['carControl', 'controlsState'])
 
     self.steer_limited = False
@@ -65,6 +68,7 @@ class Controls:
       self.calibrated_pose = self.pose_calibrator.build_calibrated_pose(device_pose)
 
   def state_control(self):
+    # global accelReceiver, steerReceiver, RT, LT, LX
     CS = self.sm['carState']
 
     # Update VehicleModel
@@ -84,7 +88,7 @@ class Controls:
     model_v2 = self.sm['modelV2']
 
     CC = car.CarControl.new_message()
-    CC.enabled = self.sm['selfdriveState'].enabled
+    CC.enabled = self.sm['selfdriveState'].enabled #à enlever si joystick ?
 
     # Check which actuators can be enabled
     standstill = abs(CS.vEgo) <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
@@ -104,6 +108,16 @@ class Controls:
     if not CC.longActive:
       self.LoC.reset()
 
+    global LX, RT, LT, accelReceiver, steerReceiver
+
+    accelReceiver = self.sm['testJoystick'].accelReceiver
+    steerReceiver = self.sm['testJoystick'].steerReceiver
+    LX = self.sm['testJoystick'].lX
+    LT = self.sm['testJoystick'].lT
+    RT = self.sm['testJoystick'].rT
+
+    print(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}")
+    print(f"LX = {LX}, LT = {LT}, RT = {RT}\n")
     # accel PID loop
     if not accelReceiver :
       pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, CS.vCruise * CV.KPH_TO_MS)
@@ -115,6 +129,8 @@ class Controls:
     # Steering PID loop and lateral MPC
     self.desired_curvature = clip_curvature(CS.vEgo, self.desired_curvature, model_v2.action.desiredCurvature)
     actuators.curvature = float(self.desired_curvature)
+
+
 
     if not steerReceiver :
       steer, steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.VM, lp,

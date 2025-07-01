@@ -11,7 +11,7 @@ def update_values(data):
         values = list(map(float, data.split()))
         if len(values) == 10:
             LX, LY, RX, RY, LT, RT, A, B, X, Y= values
-            print(f"Mis à jour : LX={LX}, LY={LY}, RX={RX}, RY={RY}, LT={LT}, RT={RT}")
+            #print(f"Mis à jour : LX={LX}, LY={LY}, RX={RX}, RY={RY}, LT={LT}, RT={RT}")
 
             if A :
                 accelReceiver = 1
