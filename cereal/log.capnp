@@ -2124,6 +2124,11 @@ struct Joystick {
   # convenient for debug and live tuning
   axes @0: List(Float32);
   buttons @1: List(Bool);
+  accelReceiver @2: Bool;
+  steerReceiver @3: Bool;
+  lX @4: Float32;
+  lT @5: Float32;
+  rT @6: Float32;
 }
 
 struct DriverStateV2 {
@@ -2564,7 +2569,7 @@ struct Event {
 
     # DO change the name of the field and struct
     # DON'T change the ID (e.g. @107)
-    # DON'T change which struct it points to 
+    # DON'T change which struct it points to
     customReserved0 @107 :Custom.CustomReserved0;
     customReserved1 @108 :Custom.CustomReserved1;
     customReserved2 @109 :Custom.CustomReserved2;

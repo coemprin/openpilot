@@ -18,11 +18,14 @@ from openpilot.selfdrive.controls.lib.latcontrol_torque import LatControlTorque
 from openpilot.selfdrive.controls.lib.longcontrol import LongControl
 from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
-from openpilot.selfdrive.controls.receiver import accelReceiver, steerReceiver, RT, LT, LX
+
 
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
 LaneChangeDirection = log.LaneChangeDirection
+
+RT, LT, LX = 0.0, 0.0, 0.0
+accelReceiver, steerReceiver = 0, 0
 
 ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 
@@ -103,6 +106,17 @@ class Controls:
       self.LaC.reset()
     if not CC.longActive:
       self.LoC.reset()
+
+    global LX, RT, LT, accelReceiver, steerReceiver
+
+    accelReceiver = self.sm['testJoystick'].accelReceiver
+    steerReceiver = self.sm['testJoystick'].steerReceiver
+    LX = self.sm['testJoystick'].lX
+    LT = self.sm['testJoystick'].lT
+    RT = self.sm['testJoystick'].rT
+
+    print(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}")
+    print(f"LX = {LX}, LT = {LT}, RT = {RT}\n")
 
     # accel PID loop
     if not accelReceiver :
