@@ -25,7 +25,7 @@ def update_values(data):
         if len(values) == 10:
 
             LX, LY, RX, RY, LT, RT, A, B, X, Y= values
-            print(f"Mis à jour : LX={LX}, LT={LT}, RT={RT}")
+            print(f"accel Manuelle = {accelReceiver}, steer Manuelle = {steerReceiver}")
 
             if A :
                 accelReceiver = True

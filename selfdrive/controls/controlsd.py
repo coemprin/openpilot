@@ -124,7 +124,7 @@ class Controls:
     if existing_file:
       try:
         with open("/data/media/0/log_from_controlsd.txt", 'a') as f:
-          f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}")
+          f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}\n")
           f.write(f"LX = {LX}, LT = {LT}, RT = {RT}\n")
 
       except FileNotFoundError:
