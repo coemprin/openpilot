@@ -18,7 +18,7 @@ from openpilot.selfdrive.controls.lib.latcontrol_torque import LatControlTorque
 from openpilot.selfdrive.controls.lib.longcontrol import LongControl
 from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 from openpilot.selfdrive.locationd.helpers import PoseCalibrator, Pose
-from openpilot.selfdrive.controls.receiver import accelReceiver, steerReceiver, RT, LT, LX
+#from openpilot.selfdrive.controls.receiver import accelReceiver, steerReceiver, RT, LT, LX
 
 State = log.SelfdriveState.OpenpilotState
 LaneChangeState = log.LaneChangeState
