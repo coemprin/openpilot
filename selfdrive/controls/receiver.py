@@ -24,17 +24,22 @@ def update_values(data):
         values = list(map(float, data.split()))
         if len(values) == 10:
 
-            LX, LY, RX, RY, LT, RT, A, B, X, Y= values
-            print(f"accel Manuelle = {accelReceiver}, steer Manuelle = {steerReceiver}")
+            #LX, LY, RX, RY, LT, RT, A, B, X, Y= values
+            LX, LT, RT, A, B, X, Y = values[0], values[4:-1]
+
 
             if A :
                 accelReceiver = True
+                print(f"accel Manuelle = {accelReceiver}, steer Manuelle = {steerReceiver}\n")
             if B :
                 accelReceiver = False
+                print(f"accel Manuelle = {accelReceiver}, steer Manuelle = {steerReceiver}\n")
             if X :
                 steerReceiver = True
+                print(f"accel Manuelle = {accelReceiver}, steer Manuelle = {steerReceiver}\n")
             if Y :
                 steerReceiver = False
+                print(f"accel Manuelle = {accelReceiver}, steer Manuelle = {steerReceiver}\n")
         else:
             print(f"Erreur : Données incorrectes reçues -> {data}")
 
