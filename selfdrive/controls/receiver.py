@@ -24,8 +24,8 @@ def update_values(data):
         values = list(map(float, data.split()))
         if len(values) == 10:
 
-            #LX, LY, RX, RY, LT, RT, A, B, X, Y= values
-            LX, LT, RT, A, B, X, Y = values[0], values[4:-1]
+            LX, LY, RX, RY, LT, RT, A, B, X, Y= values
+            #LX, LT, RT, A, B, X, Y = values[0], values[4:-1]
 
 
             if A :
