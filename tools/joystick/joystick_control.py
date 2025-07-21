@@ -90,7 +90,31 @@ class Joystick:
       return False
     return True
 
- 
+class J2:
+  def __init__(self):
+    self.kb = KBHit()
+    self.axis_increment = 0.05  # 5% of full actuation each key press
+    self.axes_map = {'w': 'gb', 's': 'gb',
+                     'a': 'steer', 'd': 'steer'}
+    self.axes_values = {'gb': 0., 'steer': 0.}
+    self.axes_order = ['gb', 'steer']
+    self.cancel = False
+
+  def update(self):
+    key = self.kb.getch().lower()
+    self.cancel = False
+    if key == 'r':
+      self.axes_values = {ax: 0. for ax in self.axes_values}
+    elif key == 'c':
+      self.cancel = True
+    elif key in self.axes_map:
+      axis = self.axes_map[key]
+      incr = self.axis_increment if key in ['w', 'a'] else -self.axis_increment
+      self.axes_values[axis] = float(np.clip(self.axes_values[axis] + incr, -1, 1))
+    else:
+      return False
+    return True
+
 def send_thread(joystick):
   pm = messaging.PubMaster(['testJoystick'])
 
