@@ -116,12 +116,9 @@ class Joystick:
     self.axes_order = [accel_axis, steer_axis]
     self.cancel = False
 
-  def update(self):
+  def update(self,data):
 
     global LX, LY, RX, RY, LT, RT
-    data = sys.stdin.readline().strip()
-    if data == "STOP":
-        print("Commande d'arrêt reçue, arrêt du receiver.")
 
     try:
         values = list(map(float, data.split()))
@@ -168,7 +165,12 @@ def joystick_control_thread(joystick):
   Params().put_bool('JoystickDebugMode', True)
   threading.Thread(target=send_thread, args=(joystick,), daemon=True).start()
   while True:
-    joystick.update()
+    data = sys.stdin.readline().strip()
+    if data == "STOP":
+        print("Commande d'arrêt reçue, arrêt du receiver.")
+        break
+    joystick.update(data)
+    time.sleep(0.01)
 
 
 def main():
