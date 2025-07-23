@@ -125,7 +125,7 @@ class Joystick:
         if len(values) == 10:
             LX, LY, RX, RY, LT, RT, A, B, X, Y= values
 
-            print(f"Joystick_Control : LX = {LX}, LT = {LT}, RT = {RT}\n")
+            print(f"Joystick_Control : LX = {LX}, LT = {LT}, RT = {RT}")
 
         else:
             print(f"Erreur : Données incorrectes reçues -> {data}")
