@@ -12,6 +12,8 @@ from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 LongCtrlState = car.CarControl.Actuators.LongControlState
 MAX_LAT_ACCEL = 2.5
 
+existing_file = True
+
 
 def joystickd_thread():
   params = Params()
@@ -44,6 +46,25 @@ def joystickd_thread():
       joystick_axes = sm['testJoystick'].axes
     else:
       joystick_axes = [0.0, 0.0]
+
+    global existing_file
+
+    if existing_file:
+      try:
+        with open("/data/media/0/log_from_joystick.txt", 'a') as f:
+          #f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}\n")
+          f.write(f"accel = {joystick_axes[0]}, steer = {joystick_axes[1]}\n")
+
+
+      except FileNotFoundError:
+          print("\nErreur : le fichier ou le dossier n'existe pas.\n")
+          existing_file = False
+      except PermissionError:
+          print("\nErreur : permission refusée pour écrire dans ce fichier.\n")
+          existing_file = False
+      except Exception as e:
+          print(f"\nUne erreur est survenue : {e}\n")
+          existing_file = False
 
     if CC.longActive:
       actuators.accel = 4.0 * float(np.clip(joystick_axes[0], -1, 1))
