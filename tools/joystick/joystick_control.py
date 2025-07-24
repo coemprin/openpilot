@@ -147,7 +147,7 @@ class Joystick:
     normStee = float(LX)  #joystick a gauche : 1, joystick à droite -1
     normStee = normStee if abs(normStee) > 0.03 else 0.  # center can be noisy, deadzone of 3%
     self.axes_values[1] = EXPO * normStee ** 3 + (1 - EXPO) * normStee  # less action near center for fine control
-
+    print(f"accel = {joystick.axes_values[0]}, steer = {joystick.axes_values[1]}\n")
     return True
 
 def send_thread(joystick):
