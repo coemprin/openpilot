@@ -17,7 +17,7 @@ EXPO = 0.4
 
 LX, LY, RX, RY, LT, RT = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 accelReceiver, steerReceiver = False, False
-existing_file = True
+
 
 class Keyboard:
   def __init__(self):
@@ -152,7 +152,7 @@ class Joystick:
 
 def send_thread(joystick):
   pm = messaging.PubMaster(['testJoystick'])
-  global existing_file
+  existing_file = True
   rk = Ratekeeper(100, print_delay_threshold=None)
 
   while True:
@@ -165,7 +165,7 @@ def send_thread(joystick):
 
     if existing_file:
       try:
-        with open("/data/media/0/log_from_joystick_control.txt", 'a') as f:
+        with open("/data/media/0/log_from_joy_control.txt", 'a') as f:
           #f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}\n")
           f.write(f"accel = {joystick.axes_values[0]}, steer = {joystick.axes_values[1]}\n")
           print(f"accel = {joystick.axes_values[0]}, steer = {joystick.axes_values[1]}\n")
