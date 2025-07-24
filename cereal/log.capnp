@@ -2124,11 +2124,8 @@ struct Joystick {
   # convenient for debug and live tuning
   axes @0: List(Float32);
   buttons @1: List(Bool);
-  accelReceiver @2: Bool;
-  steerReceiver @3: Bool;
-  lX @4: Float32;
-  lT @5: Float32;
-  rT @6: Float32;
+  accel @4: Float32;
+  steer @5: Float32;
 }
 
 struct DriverStateV2 {
