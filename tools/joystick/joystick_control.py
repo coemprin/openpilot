@@ -132,7 +132,7 @@ class Joystick:
         if len(values) == 10:
             LX, LY, RX, RY, LT, RT, A, B, X, Y= values
 
-            print(f"Joystick_Control : LX = {LX}, LT = {LT}, RT = {RT}")
+            #print(f"Joystick_Control : LX = {LX}, LT = {LT}, RT = {RT}")
 
         else:
             print(f"Erreur : Données incorrectes reçues -> {data}")
@@ -161,7 +161,25 @@ def send_thread(joystick):
 
     joystick_msg = messaging.new_message('testJoystick')
     joystick_msg.valid = True
-    joystick_msg.testJoystick.axes = [joystick.axes_values[ax] for ax in joystick.axes_order]
+    joystick_msg.testJoystick.axes = [joystick.axes_values[ax] for ax in range(0,2)]
+
+    if existing_file:
+      try:
+        with open("/data/media/0/log_from_joystick_control.txt", 'a') as f:
+          #f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}\n")
+          f.write(f"accel = {joystick.axes_values[0]}, steer = {joystick.axes_values[1]}\n")
+          print(f"accel = {joystick.axes_values[0]}, steer = {joystick.axes_values[1]}\n")
+
+
+      except FileNotFoundError:
+          print("\nErreur : le fichier ou le dossier n'existe pas.\n")
+          existing_file = False
+      except PermissionError:
+          print("\nErreur : permission refusée pour écrire dans ce fichier.\n")
+          existing_file = False
+      except Exception as e:
+          print(f"\nUne erreur est survenue : {e}\n")
+          existing_file = False
 
     pm.send('testJoystick', joystick_msg)
 
