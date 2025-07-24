@@ -152,7 +152,7 @@ class Joystick:
 
 def send_thread(joystick):
   pm = messaging.PubMaster(['testJoystick'])
-
+  global existing_file
   rk = Ratekeeper(100, print_delay_threshold=None)
 
   while True:
