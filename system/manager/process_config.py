@@ -68,27 +68,27 @@ procs = [
   NativeProcess("stream_encoderd", "system/loggerd", ["./encoderd", "--stream"], notcar),
   PythonProcess("logmessaged", "system.logmessaged", always_run),
 
-  NativeProcess("camerad", "system/camerad", ["./camerad"], driverview, enabled=not WEBCAM), #manage road camera and driver camera
-  PythonProcess("webcamerad", "tools.webcam.camerad", driverview, enabled=WEBCAM),
+  #NativeProcess("camerad", "system/camerad", ["./camerad"], driverview, enabled=not WEBCAM), #manage road camera and driver camera
+  #PythonProcess("webcamerad", "tools.webcam.camerad", driverview, enabled=WEBCAM),
   NativeProcess("logcatd", "system/logcatd", ["./logcatd"], only_onroad), #LOG
   NativeProcess("proclogd", "system/proclogd", ["./proclogd"], only_onroad), #LOG
-  PythonProcess("micd", "system.micd", iscar), #manage microphone
+  #PythonProcess("micd", "system.micd", iscar), #manage microphone
   PythonProcess("timed", "system.timed", always_run, enabled=not PC), #synchronize the time
 
   # TODO Make python process once TG allows opening QCOM from child proc
-  NativeProcess("dmonitoringmodeld", "selfdrive/modeld", ["./dmonitoringmodeld"], driverview, enabled=(WEBCAM or not PC)), #check if the driver is aware
+  #NativeProcess("dmonitoringmodeld", "selfdrive/modeld", ["./dmonitoringmodeld"], driverview, enabled=(WEBCAM or not PC)), #check if the driver is aware
   # TODO Make python process once TG allows opening QCOM from child proc
-  NativeProcess("modeld", "selfdrive/modeld", ["./modeld"], only_onroad), #predict how to drive
-  NativeProcess("sensord", "system/sensord", ["./sensord"], only_onroad, enabled=not PC), #configure and read the sensors
+  #NativeProcess("modeld", "selfdrive/modeld", ["./modeld"], only_onroad), #predict how to drive
+  #NativeProcess("sensord", "system/sensord", ["./sensord"], only_onroad, enabled=not PC), #configure and read the sensors
   NativeProcess("ui", "selfdrive/ui", ["./ui"], always_run, watchdog_max_dt=(5 if not PC else None)), #UI (enlever le guide utilisateur?)
   #PythonProcess("soundd", "selfdrive.ui.soundd", only_onroad), #sound alert
   PythonProcess("locationd", "selfdrive.locationd.locationd", only_onroad), #location of car : deduct SPEED, ...
   NativeProcess("_pandad", "selfdrive/pandad", ["./pandad"], always_run, enabled=False),
   PythonProcess("calibrationd", "selfdrive.locationd.calibrationd", only_onroad), #this is useful for the neuronal prediction
-  PythonProcess("torqued", "selfdrive.locationd.torqued", only_onroad), #adjust parameters of lateral control
-  PythonProcess("controlsd", "selfdrive.controls.controlsd", and_(not_joystick, iscar)), #control the car from planning of plannerd
+  #PythonProcess("torqued", "selfdrive.locationd.torqued", only_onroad), #adjust parameters of lateral control
+  #PythonProcess("controlsd", "selfdrive.controls.controlsd", and_(not_joystick, iscar)), #control the car from planning of plannerd
   PythonProcess("joystickd", "tools.joystick.joystickd", or_(joystick, notcar)),
-  PythonProcess("selfdrived", "selfdrive.selfdrived.selfdrived", only_onroad), # ???
+  #PythonProcess("selfdrived", "selfdrive.selfdrived.selfdrived", only_onroad), # ???
   PythonProcess("card", "selfdrive.car.card", only_onroad), #manage comunication with vehicle through CAN BUS
   PythonProcess("deleter", "system.loggerd.deleter", always_run), #LOG
   PythonProcess("dmonitoringd", "selfdrive.monitoring.dmonitoringd", driverview, enabled=(WEBCAM or not PC)), # logic : check if the driver need to retake control
