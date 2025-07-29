@@ -61,56 +61,56 @@ def and_(*fns):
   return lambda *args: operator.and_(*(fn(*args) for fn in fns))
 
 procs = [
-  DaemonProcess("manage_athenad", "system.athena.manage_athenad", "AthenadPid"),
+  DaemonProcess("manage_athenad", "system.athena.manage_athenad", "AthenadPid"), #gère des appel API avec connect.comma.ai
 
   NativeProcess("loggerd", "system/loggerd", ["./loggerd"], logging),
   NativeProcess("encoderd", "system/loggerd", ["./encoderd"], only_onroad),
   NativeProcess("stream_encoderd", "system/loggerd", ["./encoderd", "--stream"], notcar),
   PythonProcess("logmessaged", "system.logmessaged", always_run),
 
-  NativeProcess("camerad", "system/camerad", ["./camerad"], driverview, enabled=not WEBCAM),
+  NativeProcess("camerad", "system/camerad", ["./camerad"], driverview, enabled=not WEBCAM), #manage road camera and driver camera
   PythonProcess("webcamerad", "tools.webcam.camerad", driverview, enabled=WEBCAM),
-  NativeProcess("logcatd", "system/logcatd", ["./logcatd"], only_onroad),
-  NativeProcess("proclogd", "system/proclogd", ["./proclogd"], only_onroad),
-  PythonProcess("micd", "system.micd", iscar),
-  PythonProcess("timed", "system.timed", always_run, enabled=not PC),
+  NativeProcess("logcatd", "system/logcatd", ["./logcatd"], only_onroad), #LOG
+  NativeProcess("proclogd", "system/proclogd", ["./proclogd"], only_onroad), #LOG
+  PythonProcess("micd", "system.micd", iscar), #manage microphone
+  PythonProcess("timed", "system.timed", always_run, enabled=not PC), #synchronize the time
 
   # TODO Make python process once TG allows opening QCOM from child proc
-  NativeProcess("dmonitoringmodeld", "selfdrive/modeld", ["./dmonitoringmodeld"], driverview, enabled=(WEBCAM or not PC)),
+  NativeProcess("dmonitoringmodeld", "selfdrive/modeld", ["./dmonitoringmodeld"], driverview, enabled=(WEBCAM or not PC)), #check if the driver is aware
   # TODO Make python process once TG allows opening QCOM from child proc
-  NativeProcess("modeld", "selfdrive/modeld", ["./modeld"], only_onroad),
-  NativeProcess("sensord", "system/sensord", ["./sensord"], only_onroad, enabled=not PC),
-  NativeProcess("ui", "selfdrive/ui", ["./ui"], always_run, watchdog_max_dt=(5 if not PC else None)),
-  PythonProcess("soundd", "selfdrive.ui.soundd", only_onroad),
-  PythonProcess("locationd", "selfdrive.locationd.locationd", only_onroad),
+  NativeProcess("modeld", "selfdrive/modeld", ["./modeld"], only_onroad), #predict how to drive
+  NativeProcess("sensord", "system/sensord", ["./sensord"], only_onroad, enabled=not PC), #configure and read the sensors
+  NativeProcess("ui", "selfdrive/ui", ["./ui"], always_run, watchdog_max_dt=(5 if not PC else None)), #UI (enlever le guide utilisateur?)
+  #PythonProcess("soundd", "selfdrive.ui.soundd", only_onroad), #sound alert
+  PythonProcess("locationd", "selfdrive.locationd.locationd", only_onroad), #location of car : deduct SPEED, ...
   NativeProcess("_pandad", "selfdrive/pandad", ["./pandad"], always_run, enabled=False),
-  PythonProcess("calibrationd", "selfdrive.locationd.calibrationd", only_onroad),
-  PythonProcess("torqued", "selfdrive.locationd.torqued", only_onroad),
-  PythonProcess("controlsd", "selfdrive.controls.controlsd", and_(not_joystick, iscar)),
+  PythonProcess("calibrationd", "selfdrive.locationd.calibrationd", only_onroad), #this is useful for the neuronal prediction
+  PythonProcess("torqued", "selfdrive.locationd.torqued", only_onroad), #adjust parameters of lateral control
+  PythonProcess("controlsd", "selfdrive.controls.controlsd", and_(not_joystick, iscar)), #control the car from planning of plannerd
   PythonProcess("joystickd", "tools.joystick.joystickd", or_(joystick, notcar)),
-  PythonProcess("selfdrived", "selfdrive.selfdrived.selfdrived", only_onroad),
-  PythonProcess("card", "selfdrive.car.card", only_onroad),
-  PythonProcess("deleter", "system.loggerd.deleter", always_run),
-  PythonProcess("dmonitoringd", "selfdrive.monitoring.dmonitoringd", driverview, enabled=(WEBCAM or not PC)),
-  PythonProcess("qcomgpsd", "system.qcomgpsd.qcomgpsd", qcomgps, enabled=TICI),
+  PythonProcess("selfdrived", "selfdrive.selfdrived.selfdrived", only_onroad), # ???
+  PythonProcess("card", "selfdrive.car.card", only_onroad), #manage comunication with vehicle through CAN BUS
+  PythonProcess("deleter", "system.loggerd.deleter", always_run), #LOG
+  PythonProcess("dmonitoringd", "selfdrive.monitoring.dmonitoringd", driverview, enabled=(WEBCAM or not PC)), # logic : check if the driver need to retake control
+  PythonProcess("qcomgpsd", "system.qcomgpsd.qcomgpsd", qcomgps, enabled=TICI), #manage the collect of GPS datas
   PythonProcess("pandad", "selfdrive.pandad.pandad", always_run),
-  PythonProcess("paramsd", "selfdrive.locationd.paramsd", only_onroad),
-  NativeProcess("ubloxd", "system/ubloxd", ["./ubloxd"], ublox, enabled=TICI),
-  PythonProcess("pigeond", "system.ubloxd.pigeond", ublox, enabled=TICI),
-  PythonProcess("plannerd", "selfdrive.controls.plannerd", not_long_maneuver),
-  PythonProcess("maneuversd", "tools.longitudinal_maneuvers.maneuversd", long_maneuver),
-  PythonProcess("radard", "selfdrive.controls.radard", only_onroad),
-  PythonProcess("hardwared", "system.hardware.hardwared", always_run),
+  PythonProcess("paramsd", "selfdrive.locationd.paramsd", only_onroad), #car parameters
+  NativeProcess("ubloxd", "system/ubloxd", ["./ubloxd"], ublox, enabled=TICI), #analyse GNSS data : location
+  PythonProcess("pigeond", "system.ubloxd.pigeond", ublox, enabled=TICI), #manage GNSS Ublox
+  PythonProcess("plannerd", "selfdrive.controls.plannerd", not_long_maneuver), #planning of lateral and longitudinal control from the neuronal prediction
+  PythonProcess("maneuversd", "tools.longitudinal_maneuvers.maneuversd", long_maneuver), #manage longitudinal control
+  PythonProcess("radard", "selfdrive.controls.radard", only_onroad), #gather data from different radars
+  PythonProcess("hardwared", "system.hardware.hardwared", always_run), #manage material aspects
   PythonProcess("tombstoned", "system.tombstoned", always_run, enabled=not PC),
   PythonProcess("updated", "system.updated.updated", only_offroad, enabled=not PC),
-  PythonProcess("uploader", "system.loggerd.uploader", always_run),
+  PythonProcess("uploader", "system.loggerd.uploader", always_run), #LOG
   PythonProcess("statsd", "system.statsd", always_run),
 
   # debug procs
   NativeProcess("bridge", "cereal/messaging", ["./bridge"], notcar),
   PythonProcess("webrtcd", "system.webrtc.webrtcd", notcar),
   #PythonProcess("webjoystick", "tools.bodyteleop.web", notcar),
-  #PythonProcess("joystick", "tools.joystick.joystick_control", and_(joystick, iscar)),
+  #PythonProcess("joystick", "tools.joystick.joystick_control", and_(joystick, iscar)), #I launched this manually on mode offroad
 ]
 
 managed_processes = {p.name: p for p in procs}
