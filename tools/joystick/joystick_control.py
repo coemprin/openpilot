@@ -140,14 +140,20 @@ class Joystick:
     except (ValueError, KeyError) as e:
         print(f"Erreur de parsing : {e}")
 
-    normAcc = float(np.interp(RT - LT,[-2,2],[-1,1])) #-4.4 4.4 : min et max de accel
-    normAcc = normAcc if abs(normAcc) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-    self.axes_values[joystick.axes_order[0]] = EXPO * normAcc ** 3 + (1 - EXPO) * normAcc  # less action near center for fine control
+    try:
 
-    normStee = -float(LX)  #joystick a gauche : -1, joystick à droite +1
-    normStee = normStee if abs(normStee) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-    self.axes_values[joystick.axes_order[1]] = EXPO * normStee ** 3 + (1 - EXPO) * normStee  # less action near center for fine control
-    print(f"accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
+      normAcc = float(np.interp(RT - LT,[-2,2],[-1,1])) #-4.4 4.4 : min et max de accel
+      normAcc = normAcc if abs(normAcc) > 0.03 else 0.  # center can be noisy, deadzone of 3%
+      self.axes_values[joystick.axes_order[0]] = EXPO * normAcc ** 3 + (1 - EXPO) * normAcc  # less action near center for fine control
+
+      normStee = -float(LX)  #joystick a gauche : -1, joystick à droite +1
+      normStee = normStee if abs(normStee) > 0.03 else 0.  # center can be noisy, deadzone of 3%
+      self.axes_values[joystick.axes_order[1]] = EXPO * normStee ** 3 + (1 - EXPO) * normStee  # less action near center for fine control
+      print(f"accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
+
+    except Exception as e:
+          print(f"\nUne erreur est survenue : {e}\n")
+
     return True
 
 def send_thread(joystick):
