@@ -140,7 +140,7 @@ class Joystick:
     except (ValueError, KeyError) as e:
         print(f"Erreur de parsing : {e}")
 
-    normAcc = np.interp(RT - LT,[-2,2],[-1,1]) #-4.4 4.4 : min et max de accel
+    normAcc = float(np.interp(RT - LT,[-2,2],[-1,1])) #-4.4 4.4 : min et max de accel
     normAcc = normAcc if abs(normAcc) > 0.03 else 0.  # center can be noisy, deadzone of 3%
     self.axes_values[joystick.axes_order[0]] = EXPO * normAcc ** 3 + (1 - EXPO) * normAcc  # less action near center for fine control
 
