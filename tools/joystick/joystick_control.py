@@ -146,7 +146,7 @@ class Joystick:
       normAcc = normAcc if abs(normAcc) > 0.03 else 0.  # center can be noisy, deadzone of 3%
       self.axes_values[joystick.axes_order[0]] = EXPO * normAcc ** 3 + (1 - EXPO) * normAcc  # less action near center for fine control
 
-      normStee = -float(LX)  #joystick a gauche : -1, joystick à droite +1
+      normStee = -float(LX)  #joystick a gauche : LX = -1, joystick à droite LX = +1
       normStee = normStee if abs(normStee) > 0.03 else 0.  # center can be noisy, deadzone of 3%
       self.axes_values[joystick.axes_order[1]] = EXPO * normStee ** 3 + (1 - EXPO) * normStee  # less action near center for fine control
       print(f"accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
