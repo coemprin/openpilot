@@ -15,85 +15,8 @@ from openpilot.tools.lib.kbhit import KBHit
 
 EXPO = 0.4
 
-LX, LY, RX, RY, LT, RT = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-accelReceiver, steerReceiver = False, False
+accel, steer = 0.0, 0.0
 
-
-class Keyboard:
-  def __init__(self):
-    self.kb = KBHit()
-    self.axis_increment = 0.05  # 5% of full actuation each key press
-    self.axes_map = {'w': 'gb', 's': 'gb',
-                     'a': 'steer', 'd': 'steer'}
-    self.axes_values = {'gb': 0., 'steer': 0.}
-    self.axes_order = ['gb', 'steer']
-    self.cancel = False
-
-  def update(self):
-    key = self.kb.getch().lower()
-    self.cancel = False
-    if key == 'r':
-      self.axes_values = {ax: 0. for ax in self.axes_values}
-    elif key == 'c':
-      self.cancel = True
-    elif key in self.axes_map:
-      axis = self.axes_map[key]
-      incr = self.axis_increment if key in ['w', 'a'] else -self.axis_increment
-      self.axes_values[axis] = float(np.clip(self.axes_values[axis] + incr, -1, 1))
-    else:
-      return False
-    return True
-
-
-# class Joystick:
-#   def __init__(self):
-#     # This class supports a PlayStation 5 DualSense controller on the comma 3X
-#     # TODO: find a way to get this from API or detect gamepad/PC, perhaps "inputs" doesn't support it
-#     self.cancel_button = 'BTN_NORTH'  # BTN_NORTH=X/triangle
-#     if HARDWARE.get_device_type() == 'pc':
-#       accel_axis = 'ABS_Z'
-#       steer_axis = 'ABS_RX'
-#       # TODO: once the longcontrol API is finalized, we can replace this with outputting gas/brake and steering
-#       self.flip_map = {'ABS_RZ': accel_axis}
-#     else:
-#       accel_axis = 'ABS_RX'
-#       steer_axis = 'ABS_Z'
-#       self.flip_map = {'ABS_RY': accel_axis}
-
-#     self.min_axis_value = {accel_axis: 0., steer_axis: 0.}
-#     self.max_axis_value = {accel_axis: 255., steer_axis: 255.}
-#     self.axes_values = {accel_axis: 0., steer_axis: 0.}
-#     self.axes_order = [accel_axis, steer_axis]
-#     self.cancel = False
-
-#   def update(self):
-#     try:
-#       joystick_event = get_gamepad()[0]
-#     except (OSError, UnpluggedError):
-#       self.axes_values = {ax: 0. for ax in self.axes_values}
-#       return False
-
-#     event = (joystick_event.code, joystick_event.state)
-
-#     # flip left trigger to negative accel
-#     if event[0] in self.flip_map:
-#       event = (self.flip_map[event[0]], -event[1])
-
-#     if event[0] == self.cancel_button:
-#       if event[1] == 1:
-#         self.cancel = True
-#       elif event[1] == 0:   # state 0 is falling edge
-#         self.cancel = False
-#     elif event[0] in self.axes_values:
-#       self.max_axis_value[event[0]] = max(event[1], self.max_axis_value[event[0]])
-#       self.min_axis_value[event[0]] = min(event[1], self.min_axis_value[event[0]])
-
-#       norm = -float(np.interp(event[1], [self.min_axis_value[event[0]], self.max_axis_value[event[0]]], [-1., 1.]))
-#       norm = norm if abs(norm) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-#       self.axes_values[event[0]] = EXPO * norm ** 3 + (1 - EXPO) * norm  # less action near center for fine control
-#     else:
-#       return False
-#     return True
 
 class Joystick:
   def __init__(self):
@@ -118,7 +41,7 @@ class Joystick:
 
   def update(self):
 
-    global LX, LY, RX, RY, LT, RT, A, B, X, Y
+    global steer, accel
     try:
 
       data = sys.stdin.readline().strip()
@@ -129,10 +52,10 @@ class Joystick:
 
     try:
         values = list(map(float, data.split()))
-        if len(values) == 10:
-            LX, LY, RX, RY, LT, RT, A, B, X, Y= values
+        if len(values) == 2:
+            accel, steer = values
 
-            print(f"Joystick_Control : RT - LT = {RT - LT}")
+            print(f"Joystick_Control : accel = {accel}, steer = {steer}")
 
         else:
             print(f"Erreur : Données incorrectes reçues -> {data}")
@@ -142,13 +65,16 @@ class Joystick:
 
     try:
 
-      normAcc = float(np.interp(RT - LT,[-2,2],[-1,1]))
-      normAcc = normAcc if abs(normAcc) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-      self.axes_values[joystick.axes_order[0]] = EXPO * normAcc ** 3 + (1 - EXPO) * normAcc  # less action near center for fine control
+      # normAcc = float(np.interp(RT - LT,[-2,2],[-1,1]))
+      # normAcc = normAcc if abs(normAcc) > 0.03 else 0.  # center can be noisy, deadzone of 3%
+      # self.axes_values[joystick.axes_order[0]] = EXPO * normAcc ** 3 + (1 - EXPO) * normAcc  # less action near center for fine control
+      self.axes_values[joystick.axes_order[0]] = float(accel)
 
-      normStee = -float(LX)  #joystick a gauche : LX = -1, joystick à droite LX = +1
-      normStee = normStee if abs(normStee) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-      self.axes_values[joystick.axes_order[1]] = EXPO * normStee ** 3 + (1 - EXPO) * normStee  # less action near center for fine control
+      # normStee = -float(LX)  #joystick a gauche : LX = -1, joystick à droite LX = +1
+      # normStee = normStee if abs(normStee) > 0.03 else 0.  # center can be noisy, deadzone of 3%
+      # self.axes_values[joystick.axes_order[1]] = EXPO * normStee ** 3 + (1 - EXPO) * normStee  # less action near center for fine control
+      self.axes_values[joystick.axes_order[0]] = float(steer)
+
       print(f"accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
 
     except Exception as e:
@@ -172,7 +98,7 @@ def send_thread(joystick):
     if existing_file:
       try:
         with open("/data/media/0/log_joy_ctrl.txt", 'a') as f:
-          #f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}\n")
+
           f.write(f"accel = {joystick.axes_values[joystick.axes_order[0]]}, steer = {joystick.axes_values[joystick.axes_order[1]]}\n")
           print(f"accel = {joystick.axes_values[joystick.axes_order[0]]}, steer = {joystick.axes_values[joystick.axes_order[1]]}\n")
 
