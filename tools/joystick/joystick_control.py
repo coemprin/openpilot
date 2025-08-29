@@ -42,26 +42,36 @@ class Joystick:
   def update(self):
 
     global steer, accel
-    try:
 
-      data = sys.stdin.readline().strip()
-      if data == "STOP":
-          print("Commande d'arrêt reçue, arrêt du receiver.")
+    try:
+        data = sys.stdin.readline().strip()
+
+        if not data:
+            print("Canal fermé par le client.")
+            sys.exit(0)
+
+        if data == "STOP":
+            print("Commande d'arrêt reçue, arrêt du receiver.")
+            sys.exit(0)
+
+        try:
+            values = list(map(float, data.split()))
+            if len(values) == 2:
+                accel, steer = values
+                print(f"Joystick_Control : accel = {accel}, steer = {steer}")
+                print("Données reçues avec succès.")  # ✅ Message de retour au client
+                with open("/data/media/0/log_joy_ctrl_in_update.txt", 'a') as f:
+                  f.write(f"Joystick_Control : accel = {accel}, steer = {steer}\n")
+
+
+            else:
+                print(f"Erreur : Données incorrectes reçues -> {data}")
+        except (ValueError, KeyError) as e:
+            print(f"Erreur de parsing : {e}")
+
     except Exception as e:
-          print(f"\nUne erreur est survenue : {e}\n")
+        print(f"\nUne erreur est survenue : {e}\n")
 
-    try:
-        values = list(map(float, data.split()))
-        if len(values) == 2:
-            accel, steer = values
-
-            print(f"Joystick_Control : accel = {accel}, steer = {steer}")
-
-        else:
-            print(f"Erreur : Données incorrectes reçues -> {data}")
-
-    except (ValueError, KeyError) as e:
-        print(f"Erreur de parsing : {e}")
 
     try:
 
