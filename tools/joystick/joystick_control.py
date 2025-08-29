@@ -44,6 +44,8 @@ class Joystick:
     global steer, accel
 
     try:
+        with open("/data/media/0/log_joy_ctrl_in_update.txt", 'a') as f:
+                  f.write(f"attente de données\n")
         data = sys.stdin.readline().strip()
 
         if data == "STOP":
@@ -94,8 +96,8 @@ def send_thread(joystick):
   rk = Ratekeeper(100, print_delay_threshold=None)
 
   while True:
-    if rk.frame % 20 == 0:
-      print('\n' + ', '.join(f'{name}: {round(v, 3)}' for name, v in joystick.axes_values.items()))
+    #if rk.frame % 20 == 0:
+    #  print('\n' + ', '.join(f'{name}: {round(v, 3)}' for name, v in joystick.axes_values.items()))
 
     joystick_msg = messaging.new_message('testJoystick')
     joystick_msg.valid = True
@@ -162,5 +164,5 @@ if __name__ == '__main__':
     print('Using joystick, make sure to run cereal/messaging/bridge on your device if running over the network!')
     print('If not running on a comma device, the mapping may need to be adjusted.')
 
-  joystick = Keyboard() if args.keyboard else Joystick()
+  joystick = Joystick()
   joystick_control_thread(joystick)
