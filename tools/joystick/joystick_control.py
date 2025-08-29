@@ -46,13 +46,9 @@ class Joystick:
     try:
         data = sys.stdin.readline().strip()
 
-        if not data:
-            print("Canal fermé par le client.")
-            sys.exit(0)
-
         if data == "STOP":
             print("Commande d'arrêt reçue, arrêt du receiver.")
-            sys.exit(0)
+
 
         try:
             values = list(map(float, data.split()))
