@@ -106,11 +106,12 @@ procs = [
   PythonProcess("uploader", "system.loggerd.uploader", always_run),
   PythonProcess("statsd", "system.statsd", always_run),
 
+
   # debug procs
   NativeProcess("bridge", "cereal/messaging", ["./bridge"], notcar),
   PythonProcess("webrtcd", "system.webrtc.webrtcd", notcar),
   #PythonProcess("webjoystick", "tools.bodyteleop.web", notcar),
-  #PythonProcess("joystick", "tools.joystick.joystick_control", and_(joystick, iscar)),
+  PythonProcess("joystick", "tools.joystick.joystick_control", and_(joystick, iscar)), # /!\ Activate Joystick Mode before launching the car /!\
 ]
 
 managed_processes = {p.name: p for p in procs}

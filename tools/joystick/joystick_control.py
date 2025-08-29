@@ -6,6 +6,7 @@ import numpy as np
 from inputs import UnpluggedError, get_gamepad
 import sys
 import time
+import socket
 
 from cereal import messaging
 from openpilot.common.params import Params
@@ -44,56 +45,6 @@ class Keyboard:
       return False
     return True
 
-
-# class Joystick:
-#   def __init__(self):
-#     # This class supports a PlayStation 5 DualSense controller on the comma 3X
-#     # TODO: find a way to get this from API or detect gamepad/PC, perhaps "inputs" doesn't support it
-#     self.cancel_button = 'BTN_NORTH'  # BTN_NORTH=X/triangle
-#     if HARDWARE.get_device_type() == 'pc':
-#       accel_axis = 'ABS_Z'
-#       steer_axis = 'ABS_RX'
-#       # TODO: once the longcontrol API is finalized, we can replace this with outputting gas/brake and steering
-#       self.flip_map = {'ABS_RZ': accel_axis}
-#     else:
-#       accel_axis = 'ABS_RX'
-#       steer_axis = 'ABS_Z'
-#       self.flip_map = {'ABS_RY': accel_axis}
-
-#     self.min_axis_value = {accel_axis: 0., steer_axis: 0.}
-#     self.max_axis_value = {accel_axis: 255., steer_axis: 255.}
-#     self.axes_values = {accel_axis: 0., steer_axis: 0.}
-#     self.axes_order = [accel_axis, steer_axis]
-#     self.cancel = False
-
-#   def update(self):
-#     try:
-#       joystick_event = get_gamepad()[0]
-#     except (OSError, UnpluggedError):
-#       self.axes_values = {ax: 0. for ax in self.axes_values}
-#       return False
-
-#     event = (joystick_event.code, joystick_event.state)
-
-#     # flip left trigger to negative accel
-#     if event[0] in self.flip_map:
-#       event = (self.flip_map[event[0]], -event[1])
-
-#     if event[0] == self.cancel_button:
-#       if event[1] == 1:
-#         self.cancel = True
-#       elif event[1] == 0:   # state 0 is falling edge
-#         self.cancel = False
-#     elif event[0] in self.axes_values:
-#       self.max_axis_value[event[0]] = max(event[1], self.max_axis_value[event[0]])
-#       self.min_axis_value[event[0]] = min(event[1], self.min_axis_value[event[0]])
-
-#       norm = -float(np.interp(event[1], [self.min_axis_value[event[0]], self.max_axis_value[event[0]]], [-1., 1.]))
-#       norm = norm if abs(norm) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-#       self.axes_values[event[0]] = EXPO * norm ** 3 + (1 - EXPO) * norm  # less action near center for fine control
-#     else:
-#       return False
-#     return True
 
 class Joystick:
   def __init__(self):
@@ -156,7 +107,7 @@ class Joystick:
 
     return True
 
-def send_thread(joystick):
+def send_thread(joystick):  #Publie au reste du Comma
   pm = messaging.PubMaster(['testJoystick'])
   existing_file = True
   rk = Ratekeeper(100, print_delay_threshold=None)
@@ -197,10 +148,22 @@ def joystick_control_thread(joystick):
   threading.Thread(target=send_thread, args=(joystick,), daemon=True).start()
 
   print("Debut joystick_control :\n")
+
+  #creation de la socket
+  s = socket.socket()
+  s.bind(("localhost",12345))
+  s.listen(1)
+
+  conn, _ = s.accept()
+  print("Connected to the computer")
+
   while True:
 
     joystick.update()
     time.sleep(0.01)
+
+
+
 
 
 def main():
