@@ -57,9 +57,11 @@ class Joystick:
             if len(values) == 2:
                 accel, steer = values
                 print(f"Joystick_Control : accel = {accel}, steer = {steer}")
-                print("Données reçues avec succès.")  # ✅ Message de retour au client
+                print("Données reçues avec succès.\n")  # ✅ Message de retour au client
                 with open("/data/media/0/log_joy_ctrl_in_update.txt", 'a') as f:
                   f.write(f"Joystick_Control : accel = {accel}, steer = {steer}\n")
+
+                sys.stdout.flush()
 
 
             else:
@@ -72,15 +74,8 @@ class Joystick:
 
 
     try:
-
-      # normAcc = float(np.interp(RT - LT,[-2,2],[-1,1]))
-      # normAcc = normAcc if abs(normAcc) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-      # self.axes_values[joystick.axes_order[0]] = EXPO * normAcc ** 3 + (1 - EXPO) * normAcc  # less action near center for fine control
       self.axes_values[joystick.axes_order[0]] = float(accel)
 
-      # normStee = -float(LX)  #joystick a gauche : LX = -1, joystick à droite LX = +1
-      # normStee = normStee if abs(normStee) > 0.03 else 0.  # center can be noisy, deadzone of 3%
-      # self.axes_values[joystick.axes_order[1]] = EXPO * normStee ** 3 + (1 - EXPO) * normStee  # less action near center for fine control
       self.axes_values[joystick.axes_order[0]] = float(steer)
 
       print(f"accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
