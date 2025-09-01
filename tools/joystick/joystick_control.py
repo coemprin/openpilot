@@ -17,7 +17,7 @@ EXPO = 0.4
 
 accelToCar, steerToCar = 0.0, 0.0
 PORT = 8002
-IP = "127.0.0.1"
+IP = "0.0.0.0"
 conn = None
 
 
@@ -153,7 +153,7 @@ def sender_thread(): #envois les données au noeud ROS via socket
         break
 
       #Envoi de Données
-      data_to_send = "speed=" + str(speedToNode) + ",angle=" + str(angleToNode) +"\n"
+      data_to_send = f"speed={speedToNode:.4f},angle={angleToNode:.4f}\n"
       print("data envoye : " + data_to_send)
 
 
