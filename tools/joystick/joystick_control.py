@@ -3,7 +3,7 @@ import os
 import argparse
 import threading
 import numpy as np
-from inputs import UnpluggedError, get_gamepad
+#from inputs import UnpluggedError, get_gamepad
 import sys
 import time
 
@@ -15,7 +15,40 @@ from openpilot.tools.lib.kbhit import KBHit
 
 EXPO = 0.4
 
-accel, steer = 0.0, 0.0
+accelToCar, steerToCar = 0.0, 0.0
+PORT = 8002
+IP = "127.0.0.1"
+conn = None
+
+
+import socket
+
+
+def receive_socket():
+    global accelToCar, steerToCar
+    global conn
+
+    buffer = conn.recv(1024).decode()
+    if not buffer :
+      conn.close()
+      s.close()
+
+    for line in buffer.strip().split('\n'):
+        print("Serveur : reçu du client : ", line)
+
+        try:
+            data = dict(part.split('=') for part in line.split(','))
+            accelToCar = float(data.get('accel', 0.0))
+            steerToCar = float(data.get('steer', 0.0))
+
+            print("Acceleration:", accelToCar)
+            print("Steer:", steerToCar)
+        except Exception as e:
+            print("Erreur de parsing :", e)
+            return False
+
+    return True
+
 
 
 class Joystick:
@@ -41,58 +74,39 @@ class Joystick:
 
   def update(self):
 
-    global steer, accel
+    global steerToCar, accelToCar
+    global conn
 
     try:
-        with open("/data/media/0/log_joy_ctrl_in_update.txt", 'a') as f:
-                  f.write(f"attente de données\n")
-        data = sys.stdin.readline().strip()
-
-        if data == "STOP":
-            print("Commande d'arrêt reçue, arrêt du receiver.")
-
-
-        try:
-            values = list(map(float, data.split()))
-            if len(values) == 2:
-                accel, steer = values
-                print(f"Joystick_Control : accel = {accel}, steer = {steer}")
-                print("Données reçues avec succès.\n")  # ✅ Message de retour au client
-                with open("/data/media/0/log_joy_ctrl_in_update.txt", 'a') as f:
-                  f.write(f"Joystick_Control : accel = {accel}, steer = {steer}\n")
-
-                sys.stdout.flush()
-
-
-            else:
-                print(f"Erreur : Données incorrectes reçues -> {data}")
-        except (ValueError, KeyError) as e:
-            print(f"Erreur de parsing : {e}")
+        #A CHANGER EN SOCKET
+        if not receive_socket() :
+          # Ferme la connexion
+          conn.close()
+          s.close()
+          return False
 
     except Exception as e:
-        print(f"\nUne erreur est survenue : {e}\n")
-
+          print(f"\nUne erreur est survenue 1 : {e}\n")
+          conn.close()
+          s.close()
+          return False
 
     try:
-      self.axes_values[joystick.axes_order[0]] = float(accel)
-
-      self.axes_values[joystick.axes_order[0]] = float(steer)
-
-      print(f"accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
+      self.axes_values[joystick.axes_order[0]] = float(accelToCar)
+      self.axes_values[joystick.axes_order[1]] = float(steerToCar)
+      print(f"Server: donnee envoyé à Joystick.py : accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
 
     except Exception as e:
-          print(f"\nUne erreur est survenue : {e}\n")
+          print(f"\nUne erreur est survenue 2 : {e}\n")
 
     return True
 
-def send_thread(joystick):
+def publish_thread(joystick):
   pm = messaging.PubMaster(['testJoystick'])
   existing_file = True
   rk = Ratekeeper(100, print_delay_threshold=None)
 
   while True:
-    #if rk.frame % 20 == 0:
-    #  print('\n' + ', '.join(f'{name}: {round(v, 3)}' for name, v in joystick.axes_values.items()))
 
     joystick_msg = messaging.new_message('testJoystick')
     joystick_msg.valid = True
@@ -102,9 +116,7 @@ def send_thread(joystick):
       try:
         with open("/data/media/0/log_joy_ctrl.txt", 'a') as f:
 
-          f.write(f"accel = {joystick.axes_values[joystick.axes_order[0]]}, steer = {joystick.axes_values[joystick.axes_order[1]]}\n")
-          print(f"accel = {joystick.axes_values[joystick.axes_order[0]]}, steer = {joystick.axes_values[joystick.axes_order[1]]}\n")
-
+          f.write(f"envoye a Joystick : accel = {joystick.axes_values[joystick.axes_order[0]]}, steer = {joystick.axes_values[joystick.axes_order[1]]}\n")
 
       except FileNotFoundError:
           print("\nErreur : le fichier ou le dossier n'existe pas.\n")
@@ -113,7 +125,7 @@ def send_thread(joystick):
           print("\nErreur : permission refusée pour écrire dans ce fichier.\n")
           existing_file = False
       except Exception as e:
-          print(f"\nUne erreur est survenue : {e}\n")
+          print(f"\nUne erreur est survenue 3 : {e}\n")
           existing_file = False
 
     pm.send('testJoystick', joystick_msg)
@@ -121,18 +133,70 @@ def send_thread(joystick):
     rk.keep_time()
 
 
-def joystick_control_thread(joystick):
-  Params().put_bool('JoystickDebugMode', True)
-  threading.Thread(target=send_thread, args=(joystick,), daemon=True).start()
+def sender_thread(): #envois les données au noeud ROS via socket
+  sm = messaging.SubMaster(['carState'])
 
-  print("Debut joystick_control :\n")
+  global conn
+  speedToNode, angleToNode = 0.0, 0.0
+
   while True:
 
-    joystick.update()
+      try :
+        sm.update(0)
+        CS = sm['carState']
+        speedToNode = CS.vEgo
+        angleToNode = CS.steeringAngleDeg
+        #print(str(speedToNode) + " " + str(angleToNode))
+
+      except Exception as e:
+        print(f"\nUne erreur est survenue 4 : {e}\n")
+        break
+
+      #Envoi de Données
+      data_to_send = "speed=" + str(speedToNode) + ",angle=" + str(angleToNode) +"\n"
+      print("data envoye : " + data_to_send)
+
+
+      try:
+          conn.sendall(data_to_send.encode())
+      except (BrokenPipeError, ConnectionResetError) as e:
+          print(f"Erreur d'envoi : {e}")
+          conn.close()
+          s.close()
+          break  # sortir de la boucle pour éviter de spammer
+
+      time.sleep(0.1)  # Attend 1 seconde
+
+   #recoit la vitesse et angle et le retourne à ROS via socket
+
+
+
+def joystick_control_thread(joystick):
+  Params().put_bool('JoystickDebugMode', True)
+  threading.Thread(target=publish_thread, args=(joystick,), daemon=True).start()
+  threading.Thread(target=sender_thread, daemon=True).start()
+
+  print("Debut joystick_control :\n")
+
+  server_online = True
+  while server_online:
+
+    server_online = joystick.update()
     time.sleep(0.01)
 
 
 def main():
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+  s.bind((IP, PORT))
+  s.listen(1)
+  print("Serveur en attente de connexion...")
+
+  global conn
+
+  conn, addr = s.accept()
+  print(f"Connexion établie avec {addr}")
+
   joystick_control_thread(Joystick())
 
 
@@ -160,4 +224,15 @@ if __name__ == '__main__':
     print('If not running on a comma device, the mapping may need to be adjusted.')
 
   joystick = Joystick()
+
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+  s.bind((IP, PORT))
+  s.listen(1)
+  print("Serveur en attente de connexion...")
+
+
+  conn, addr = s.accept()
+  print(f"Connexion établie avec {addr}")
+
   joystick_control_thread(joystick)

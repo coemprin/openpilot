@@ -76,7 +76,6 @@ def joystickd_thread():
       max_angle = math.degrees(VM.get_steer_from_curvature(max_curvature, sm['carState'].vEgo, sm['liveParameters'].roll))
 
 
-
       actuators.steer = float(np.clip(joystick_axes[1], -max_angle, max_angle))
 
       actuators.steeringAngleDeg, actuators.curvature = actuators.steer, actuators.steer * -max_curvature
