@@ -154,7 +154,7 @@ def sender_thread(): #envois les données au noeud ROS via socket
 
       #Envoi de Données
       data_to_send = f"speed={speedToNode:.4f},angle={angleToNode:.4f}\n"
-      print("data envoye : " + data_to_send)
+      #print("data envoye : " + data_to_send)
 
 
       try:
@@ -165,7 +165,7 @@ def sender_thread(): #envois les données au noeud ROS via socket
           s.close()
           break  # sortir de la boucle pour éviter de spammer
 
-      time.sleep(0.1)  # Attend 1 seconde
+      time.sleep(0.02)  # Attend 20 milliseconde
 
    #recoit la vitesse et angle et le retourne à ROS via socket
 
