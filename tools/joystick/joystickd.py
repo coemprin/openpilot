@@ -14,11 +14,21 @@ MAX_LAT_ACCEL = 2.5
 
 existing_file = True
 
+steerRatio=0.0 #change depending of car go to openbdc/car/'car_brand'/values.py
+
+def wheel_angle_to_steer_angle(wheelAngle):
+
+  global steerRatio
+
+  return steerRatio * wheelAngle
+
 
 def joystickd_thread():
   params = Params()
   cloudlog.info("joystickd is waiting for CarParams")
   CP = messaging.log_from_bytes(params.get("CarParams", block=True), car.CarParams)
+  global steerRatio
+  steerRatio = CP.steerRatio
   VM = VehicleModel(CP)
 
   sm = messaging.SubMaster(['carState', 'onroadEvents', 'liveParameters', 'selfdriveState', 'testJoystick'], frequency=1. / DT_CTRL)
