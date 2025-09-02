@@ -15,7 +15,7 @@ from openpilot.tools.lib.kbhit import KBHit
 
 EXPO = 0.4
 
-accelToCar, steerToCar = 0.0, 0.0
+accelToCar, steerToCar, speedToCar = 0.0, 0.0, 0.0
 PORT = 8002
 IP = "0.0.0.0"
 conn = None
@@ -25,7 +25,7 @@ import socket
 
 
 def receive_socket():
-    global accelToCar, steerToCar
+    global accelToCar, steerToCar, speedToCar
     global conn
 
     buffer = conn.recv(1024).decode()
@@ -38,11 +38,14 @@ def receive_socket():
 
         try:
             data = dict(part.split('=') for part in line.split(','))
-            accelToCar = float(data.get('accel', 0.0))
-            steerToCar = float(data.get('steer', 0.0))
+            accelToCar = float(data.get('accel', accelToCar))
+            steerToCar = float(data.get('steer', steerToCar))
+            speedToCar = float(data.get('steer', speedToCar))
 
             print("Acceleration:", accelToCar)
             print("Steer:", steerToCar)
+            print("Steed:", speedToCar)
+
         except Exception as e:
             print("Erreur de parsing :", e)
             return False
