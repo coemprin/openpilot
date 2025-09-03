@@ -16,9 +16,13 @@ from openpilot.tools.lib.kbhit import KBHit
 EXPO = 0.4
 
 accelToCar, steerToCar, speedToCar = 0.0, 0.0, 0.0
-PORT = 8002
-IP = "0.0.0.0"
+PORT = 12345
+IP = "localhost"
 conn = None
+s = None
+server_online = True
+sm = None
+pm = None
 
 
 import socket
@@ -26,29 +30,34 @@ import socket
 
 def receive_socket():
     global accelToCar, steerToCar, speedToCar
-    global conn
+    global conn, s
 
-    buffer = conn.recv(1024).decode()
-    if not buffer :
-      conn.close()
-      s.close()
+    try :
+      buffer = conn.recv(1024).decode()
+      if not buffer :
+        return False
 
-    for line in buffer.strip().split('\n'):
-        print("Serveur : reçu du client : ", line)
 
-        try:
-            data = dict(part.split('=') for part in line.split(','))
-            accelToCar = float(data.get('accel', accelToCar))
-            steerToCar = float(data.get('steer', steerToCar))
-            speedToCar = float(data.get('steer', speedToCar))
+      for line in buffer.strip().split('\n'):
+          print("Serveur : reçu du client : ", line)
 
-            print("Acceleration:", accelToCar)
-            print("Steer:", steerToCar)
-            print("Steed:", speedToCar)
+          try:
+              data = dict(part.split('=') for part in line.split(','))
+              accelToCar = float(data.get('accel', accelToCar))
+              steerToCar = float(data.get('steer', steerToCar))
+              speedToCar = float(data.get('speed', speedToCar))
 
-        except Exception as e:
-            print("Erreur de parsing :", e)
-            return False
+              print("Acceleration:", accelToCar)
+              print("Steer:", steerToCar)
+              print("Vitesse:", speedToCar)
+
+          except Exception as e:
+              print("Erreur de parsing :", e)
+              return False
+    except Exception as e :
+       print("Erreur de reception du message client :", e)
+       return False
+
 
     return True
 
@@ -81,23 +90,22 @@ class Joystick:
     global conn
 
     try:
-        #A CHANGER EN SOCKET
         if not receive_socket() :
-          # Ferme la connexion
+          print("\n--> Connection Perdu <--\n")
           conn.close()
-          s.close()
+          conn = None
           return False
 
     except Exception as e:
           print(f"\nUne erreur est survenue 1 : {e}\n")
           conn.close()
-          s.close()
+          conn = None
           return False
 
     try:
-      self.axes_values[joystick.axes_order[0]] = float(accelToCar)
-      self.axes_values[joystick.axes_order[1]] = float(steerToCar)
-      print(f"Server: donnee envoyé à Joystick.py : accel = {self.axes_values[joystick.axes_order[0]]}, steer = {self.axes_values[joystick.axes_order[1]]}\n")
+      self.axes_values[self.axes_order[0]] = float(accelToCar)
+      self.axes_values[self.axes_order[1]] = float(steerToCar)
+      print(f"Server: donnee envoyé à Joystick.py : accel = {self.axes_values[self.axes_order[0]]}, steer = {self.axes_values[self.axes_order[1]]}\n")
 
     except Exception as e:
           print(f"\nUne erreur est survenue 2 : {e}\n")
@@ -105,11 +113,12 @@ class Joystick:
     return True
 
 def publish_thread(joystick):
-  pm = messaging.PubMaster(['testJoystick'])
+  global pm
   existing_file = True
   rk = Ratekeeper(100, print_delay_threshold=None)
+  global conn
 
-  while True:
+  while conn:
 
     joystick_msg = messaging.new_message('testJoystick')
     joystick_msg.valid = True
@@ -137,9 +146,9 @@ def publish_thread(joystick):
 
 
 def sender_thread(): #envois les données au noeud ROS via socket
-  sm = messaging.SubMaster(['carState'])
 
-  global conn
+
+  global conn, sm
   speedToNode, angleToNode = 0.0, 0.0
 
   while True:
@@ -161,46 +170,61 @@ def sender_thread(): #envois les données au noeud ROS via socket
 
 
       try:
-          conn.sendall(data_to_send.encode())
+          if conn :
+            conn.sendall(data_to_send.encode())
+          else : break
       except (BrokenPipeError, ConnectionResetError) as e:
           print(f"Erreur d'envoi : {e}")
-          conn.close()
-          s.close()
           break  # sortir de la boucle pour éviter de spammer
 
       time.sleep(0.02)  # Attend 20 milliseconde
 
    #recoit la vitesse et angle et le retourne à ROS via socket
 
+def Connect() :
+  global conn,s
 
+  s.listen(1)
+  print("Serveur en attente de connection...")
 
-def joystick_control_thread(joystick):
+  conn, addr = s.accept()
+  print(f"Connexion établie avec {addr}\n")
+
+  if conn : return True
+  else : return False
+
+def run():
+  global sm, pm, s
+
+  sm = messaging.SubMaster(['carState'])
+  pm = messaging.PubMaster(['testJoystick'])
+
+  joystick = Joystick()
   Params().put_bool('JoystickDebugMode', True)
-  threading.Thread(target=publish_thread, args=(joystick,), daemon=True).start()
-  threading.Thread(target=sender_thread, daemon=True).start()
 
-  print("Debut joystick_control :\n")
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s.bind((IP, PORT))
 
-  server_online = True
-  while server_online:
+  while (True):
+    Connect()
 
-    server_online = joystick.update()
-    time.sleep(0.01)
+    threading.Thread(target=publish_thread, args=(joystick,), daemon=True).start()
+    threading.Thread(target=sender_thread, daemon=True).start()
+
+    print("Debut joystick_control :\n")
+
+    server_online = True
+    while server_online:
+
+      server_online = joystick.update()
+      time.sleep(0.01)
+
+
 
 
 def main():
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-  s.bind((IP, PORT))
-  s.listen(1)
-  print("Serveur en attente de connexion...")
-
-  global conn
-
-  conn, addr = s.accept()
-  print(f"Connexion établie avec {addr}")
-
-  joystick_control_thread(Joystick())
+  run()
 
 
 if __name__ == '__main__':
@@ -216,26 +240,5 @@ if __name__ == '__main__':
     exit()
 
   print()
-  if args.keyboard:
-    print('Gas/brake control: `W` and `S` keys')
-    print('Steering control: `A` and `D` keys')
-    print('Buttons')
-    print('- `R`: Resets axes')
-    print('- `C`: Cancel cruise control')
-  else:
-    print('Using joystick, make sure to run cereal/messaging/bridge on your device if running over the network!')
-    print('If not running on a comma device, the mapping may need to be adjusted.')
 
-  joystick = Joystick()
-
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-  s.bind((IP, PORT))
-  s.listen(1)
-  print("Serveur en attente de connexion...")
-
-
-  conn, addr = s.accept()
-  print(f"Connexion établie avec {addr}")
-
-  joystick_control_thread(joystick)
+  run()
