@@ -17,7 +17,7 @@ EXPO = 0.4
 
 accelToCar, steerToCar, speedToCar = 0.0, 0.0, 0.0
 PORT = 12345
-IP = "localhost"
+IP = "0.0.0.0"
 conn = None
 s = None
 server_online = True
@@ -118,17 +118,22 @@ def publish_thread(joystick):
   rk = Ratekeeper(100, print_delay_threshold=None)
   global conn
 
-  while conn:
+  while True:
+    if not Params().get_bool('JoystickDebugMode') :
+       Params().put_bool('JoystickDebugMode', True) #garder le joystick mode actif
 
     joystick_msg = messaging.new_message('testJoystick')
     joystick_msg.valid = True
-    joystick_msg.testJoystick.axes = [joystick.axes_values[ax] for ax in joystick.axes_order]
+    if (conn) :
+       joystick_msg.testJoystick.axes = [joystick.axes_values[ax] for ax in joystick.axes_order]
+    else :
+       joystick_msg.testJoystick.axes = [0.0,0.0]
 
-    if existing_file:
+    if existing_file and conn:
       try:
         with open("/data/media/0/log_joy_ctrl.txt", 'a') as f:
 
-          f.write(f"envoye a Joystick : accel = {joystick.axes_values[joystick.axes_order[0]]}, steer = {joystick.axes_values[joystick.axes_order[1]]}\n")
+          f.write(f"envoye a Joystick : accel = {joystick_msg.testJoystick.axes[0]}, steer = {joystick_msg.testJoystick.axes[1]}\n")
 
       except FileNotFoundError:
           print("\nErreur : le fichier ou le dossier n'existe pas.\n")
