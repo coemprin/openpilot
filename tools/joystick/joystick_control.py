@@ -222,7 +222,7 @@ def run():
     while server_online:
 
       server_online = joystick.update()
-      time.sleep(0.01)
+      time.sleep(0.001) #time.sleep(0.01)
 
 
 
