@@ -53,9 +53,14 @@ def joystickd_thread():
     should_reset_joystick = sm.recv_frame['testJoystick'] == 0 or (sm.frame - sm.recv_frame['testJoystick'])*DT_CTRL > 0.2
 
     if not should_reset_joystick:
-      joystick_axes = sm['testJoystick'].axes
+
+      accelToCAN = sm['testJoystick'].accel
+      steerToCAN = sm['testJoystick'].steer
+
     else:
-      joystick_axes = [0.0, 0.0]
+
+      accelToCAN = 0.0
+      steerToCAN = 0.0
 
     global existing_file
 
@@ -63,7 +68,7 @@ def joystickd_thread():
       try:
         with open("/data/media/0/log_from_joystick.txt", 'a') as f:
           #f.write(f"Controlsd : AccelReceiver : {accelReceiver} and SteerReceiver {steerReceiver}\n")
-          f.write(f"accel = {joystick_axes[0]}, steer = {joystick_axes[1]}\n")
+          f.write(f"accel = {accelToCAN}, steer = {steerToCAN}\n")
 
 
       except FileNotFoundError:
@@ -77,16 +82,16 @@ def joystickd_thread():
           existing_file = False
 
     if CC.longActive:
-      #actuators.accel = 4.0 * float(np.clip(joystick_axes[0], -1, 1))
-      actuators.accel = float(np.clip(joystick_axes[0], -4, 4))
+      #actuators.accel = 4.0 * float(np.clip(accelToCAN, -1, 1))
+      actuators.accel = float(np.clip(accelToCAN, -4, 4))
       actuators.longControlState = LongCtrlState.pid if sm['carState'].vEgo > CP.vEgoStopping else LongCtrlState.stopping
 
     if CC.latActive:
       max_curvature = MAX_LAT_ACCEL / max(sm['carState'].vEgo ** 2, 5)
       max_angle = math.degrees(VM.get_steer_from_curvature(max_curvature, sm['carState'].vEgo, sm['liveParameters'].roll))
 
-      #actuators.steer = float(np.clip(joystick_axes[1],-1,1))
-      actuators.steer = float(joystick_axes[1])
+      #actuators.steer = float(np.clip(steerToCAN,-1,1))
+      actuators.steer = float(steerToCAN)
 
       #Je pense que la ligne suivante n'a aucune incidence pour la Hyundai IONIQ
       actuators.steeringAngleDeg, actuators.curvature = actuators.steer * max_angle, actuators.steer * -max_curvature
