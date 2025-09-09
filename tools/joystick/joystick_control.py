@@ -29,7 +29,7 @@ import socket
 
 
 def receive_socket():
-    '''Receive data from the client and update the variables''' #Is another thread is needed for this?
+    '''Receive data from the client and update the variables''' #Is another thread is needed for this? I dont think so
     global accelToCar, steerToCar, speedToCar
     global conn, s
 
@@ -70,6 +70,7 @@ class Data:
     self.steer = 0.
 
   def update(self):
+    '''Update the variables'''
 
     global steerToCar, accelToCar
     global conn
@@ -99,6 +100,7 @@ class Data:
     return True
 
 def publish_thread(data):
+  '''Publish the data on the topic JoystickdebugMode'''
   global pm
   existing_file = True
   rk = Ratekeeper(100, print_delay_threshold=None)
@@ -111,18 +113,18 @@ def publish_thread(data):
     joystick_msg = messaging.new_message('testJoystick')
     joystick_msg.valid = True
     if (conn) :
-       joystick_msg.accel = data.accel
-       joystick_msg.steer = data.steer
+       joystick_msg.testJoystick.accel = data.accel
+       joystick_msg.testJoystick.steer = data.steer
     else :
-       joystick_msg.accel = 0.0
-       joystick_msg.steer = 0.0
+       joystick_msg.testJoystick.accel = 0.0
+       joystick_msg.testJoystick.steer = 0.0
 
 
     if existing_file and conn:
       try:
         with open("/data/media/0/log_joy_ctrl.txt", 'a') as f:
 
-          f.write(f"Sent to Joystick : accel = {joystick_msg.accel}, steer = {joystick_msg.steer}\n")
+          f.write(f"Sent to Joystick : accel = {joystick_msg.testJoystick.accel}, steer = {joystick_msg.testJoystick.steer}\n")
 
       except FileNotFoundError:
           print("\nError : the file doesn't exist.\n")
@@ -140,7 +142,7 @@ def publish_thread(data):
 
 
 def sender_thread():
-  '''Gather Data from CarState and send it to the Client''' #Is another thread is needed for this?
+  '''Gather Data from CarState and send it to the Client''' #Is another thread is needed for this? YES
 
 
   global conn, sm
@@ -189,6 +191,7 @@ def Connect() :
   else : return False
 
 def run():
+  '''Set up the socket server and the threads'''
   global sm, pm, s
 
   sm = messaging.SubMaster(['carState'])

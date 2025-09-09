@@ -12,15 +12,15 @@ from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 LongCtrlState = car.CarControl.Actuators.LongControlState
 MAX_LAT_ACCEL = 2.5
 
-existing_file = True
+# existing_file = True
 
-steerRatio=0.0 #change depending of car go to openbdc/car/'car_brand'/values.py
+# steerRatio=0.0 #change depending of car go to openbdc/car/'car_brand'/values.py
 
-def wheel_angle_to_steer_angle(wheelAngle): #inutile
+# def wheel_angle_to_steer_angle(wheelAngle): #inutile
 
-  global steerRatio
+#   global steerRatio
 
-  return steerRatio * wheelAngle
+#   return steerRatio * wheelAngle
 
 
 def joystickd_thread():
