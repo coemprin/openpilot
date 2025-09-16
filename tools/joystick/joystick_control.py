@@ -154,23 +154,34 @@ def sender_thread(): #envois les données au noeud ROS via socket
 
 
   global conn, sm
-  speedToNode, angleToNode = 0.0, 0.0
+  speedEstimateToROS = 0.0
+  steeringAngleDegToROS = 0.0
+  speedRAWToROS = 0.0
+  accelEstimateToROS = 0.0
+  steerTorqueToROS = 0.0
+
+
 
   while True:
 
       try :
         sm.update(0)
         CS = sm['carState']
-        speedToNode = CS.vEgo
-        angleToNode = CS.steeringAngleDeg
-        #print(str(speedToNode) + " " + str(angleToNode))
+        speedEstimateToROS = CS.vEgo
+        steeringAngleDegToROS = CS.steeringAngleDeg
+        speedRAWToROS = CS.vEgoRaw
+        accelEstimateToROS = CS.aEgo
+        steerTorqueToROS = CS.steeringTorque
+        #print(str(speedEstimateToROS) + " " + str(steeringAngleDegToROS))
 
       except Exception as e:
         print(f"\nUne erreur est survenue 4 : {e}\n")
         break
 
       #Envoi de Données
-      data_to_send = f"speed={speedToNode:.4f},angle={angleToNode:.4f}\n"
+      data_to_send = f"speed={speedEstimateToROS:.4f},angle={steeringAngleDegToROS:.4f},\
+                       rawspeed={speedRAWToROS:.4f},accel={accelEstimateToROS:.4f},\
+                       couple={steerTorqueToROS :.4f}\n"
       #print("data envoye : " + data_to_send)
 
 
