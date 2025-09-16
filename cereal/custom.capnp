@@ -11,6 +11,8 @@ $Cxx.namespace("cereal");
 # DON'T change the identifier (e.g. @0x81c2f05a394cf4af)
 
 struct CustomReserved0 @0x81c2f05a394cf4af {
+  accel @0: Float32;
+  steer @1: Float32;
 }
 
 struct CustomReserved1 @0xaedffd8f31e7b55d {

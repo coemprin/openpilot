@@ -112,12 +112,18 @@ def publish_thread(data):
 
     joystick_msg = messaging.new_message('testJoystick')
     joystick_msg.valid = True
+    # if (conn) :
+    #    joystick_msg.testJoystick.accel = data.accel
+    #    joystick_msg.testJoystick.steer = data.steer
+    # else :
+    #    joystick_msg.testJoystick.accel = 0.0
+    #    joystick_msg.testJoystick.steer = 0.0
+
     if (conn) :
-       joystick_msg.testJoystick.accel = data.accel
-       joystick_msg.testJoystick.steer = data.steer
+       joystick_msg.testJoystick.axes = [data.accel,data.steer]
     else :
-       joystick_msg.testJoystick.accel = 0.0
-       joystick_msg.testJoystick.steer = 0.0
+       joystick_msg.testJoystick.axes = [0.0,0.0]
+
 
 
     if existing_file and conn:

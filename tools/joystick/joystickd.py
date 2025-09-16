@@ -54,8 +54,11 @@ def joystickd_thread():
 
     if not should_reset_joystick:
 
-      accelToCAN = sm['testJoystick'].accel
-      steerToCAN = sm['testJoystick'].steer
+      # accelToCAN = sm['testJoystick'].accel
+      # steerToCAN = sm['testJoystick'].steer
+
+      accelToCAN = sm['testJoystick'].axes[0]
+      steerToCAN = sm['testJoystick'].steer[1]
 
     else:
 
