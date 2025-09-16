@@ -194,22 +194,50 @@ def run():
   '''Set up the socket server and the threads'''
   global sm, pm, s
 
-  sm = messaging.SubMaster(['carState'])
-  pm = messaging.PubMaster(['testJoystick'])
+  try :
 
-  data = Data()
+    sm = messaging.SubMaster(['carState'])
+    pm = messaging.PubMaster(['testJoystick'])
+
+  except Exception as e:
+        print(f"\nError while preparing sub and pub : {e}\n")
+        return 0
+  try :
+    data = Data()
+  except Exception as e:
+        print(f"\nError while initialize Data : {e}\n")
+        return 0
 
   #This next line is essential
-  Params().put_bool('JoystickDebugMode', True)
+  try:
+    Params().put_bool('JoystickDebugMode', True)
+  except Exception as e:
+        print(f"\nError while enabling joystick mode : {e}\n")
+        return 0
 
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s.bind((IP, PORT))
+  try :
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((IP, PORT))
+
+  except Exception as e:
+        print(f"\nError while preparing socket and binding : {e}\n")
+        return 0
 
   while (True):
-    Connect()
+    try :
+      Connect()
+    except Exception as e:
+        print(f"\nError while connecting : {e}\n")
+        return 0
 
-    threading.Thread(target=publish_thread, args=(data,), daemon=True).start()
-    threading.Thread(target=sender_thread, daemon=True).start()
+    try:
+      threading.Thread(target=publish_thread, args=(data,), daemon=True).start()
+      threading.Thread(target=sender_thread, daemon=True).start()
+      #threading.Thread(target=gather_thread, daemon=True).start()
+    except Exception as e:
+        print(f"\nError while launching threads : {e}\n")
+        return 0
 
     print("Debut joystick_control :\n")
 
