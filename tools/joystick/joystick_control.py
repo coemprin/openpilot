@@ -181,7 +181,7 @@ def sender_thread(): #envois les données au noeud ROS via socket
       #Envoi de Données
       data_to_send = f"speed={speedEstimateToROS:.4f},angle={steeringAngleDegToROS:.4f},\
                        rawspeed={speedRAWToROS:.4f},accel={accelEstimateToROS:.4f},\
-                       couple={steerTorqueToROS :.4f}\n"
+                       torque={steerTorqueToROS :.4f}\n"
       #print("data envoye : " + data_to_send)
 
 
