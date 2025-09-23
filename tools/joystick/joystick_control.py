@@ -150,6 +150,13 @@ def publish_thread(joystick):
     rk.keep_time()
 
 
+
+def precise_sleep(microseconds):
+    target = time.perf_counter() + microseconds / 1_000_000
+    while time.perf_counter() < target:
+        pass  # Boucle active (attention à la charge CPU)
+
+
 def sender_thread(): #envois les données au noeud ROS via socket
 
 
@@ -159,13 +166,16 @@ def sender_thread(): #envois les données au noeud ROS via socket
   speedRAWToROS = 0.0
   accelEstimateToROS = 0.0
   steerTorqueToROS = 0.0
-
+  tlast = np.uint64(time.time() * 1_000_000)
+  identifiant = np.uint64(0)
 
 
   while True:
 
       try :
+        #t = np.uint64(time.time() * 1_000_000)  #current time in us
         sm.update(0)
+        #dt = np.uint64(time.time() * 1_000_000) - t #period in us
         CS = sm['carState']
         speedEstimateToROS = CS.vEgo
         steeringAngleDegToROS = CS.steeringAngleDeg
@@ -173,6 +183,14 @@ def sender_thread(): #envois les données au noeud ROS via socket
         accelEstimateToROS = CS.aEgo
         steerTorqueToROS = CS.steeringTorque
         steerTorqueEPSToROS = CS.steeringTorqueEps
+
+        #     Convertir en microsecondes et en entier 64 bits
+
+        t = np.uint64(time.time() * 1_000_000) #current time in us
+        dt = t - tlast  #periode in us
+        tlast = t
+        identifiant += 1
+
         #print(str(speedEstimateToROS) + " " + str(steeringAngleDegToROS))
 
       except Exception as e:
@@ -180,7 +198,7 @@ def sender_thread(): #envois les données au noeud ROS via socket
         break
 
       #Envoi de Données
-      data_to_send = f"speed={speedEstimateToROS:.4f},steer={steeringAngleDegToROS:.4f},rawspeed={speedRAWToROS:.4f},accel={accelEstimateToROS:.4f},torque={steerTorqueToROS :.4f},torqueEPS={steerTorqueEPSToROS:.4f}\n"
+      data_to_send = f"t={t},dt={dt},id={identifiant},speed={speedEstimateToROS:.4f},steer={steeringAngleDegToROS:.4f},rawspeed={speedRAWToROS:.4f},accel={accelEstimateToROS:.4f},torque={steerTorqueToROS :.4f},torqueEPS={steerTorqueEPSToROS:.4f}\n"
       #print("data envoye : " + data_to_send)
 
 
@@ -192,7 +210,7 @@ def sender_thread(): #envois les données au noeud ROS via socket
           print(f"Erreur d'envoi : {e}")
           break  # sortir de la boucle pour éviter de spammer
 
-      time.sleep(0.02)  # Attend 20 milliseconde
+      time.sleep(0.020) #precise_sleep(20000)  # Attend 20 milliseconde
 
    #recoit la vitesse et angle et le retourne à ROS via socket
 
