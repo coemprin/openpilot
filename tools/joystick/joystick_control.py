@@ -210,7 +210,7 @@ def sender_thread(): #envois les données au noeud ROS via socket
           print(f"Erreur d'envoi : {e}")
           break  # sortir de la boucle pour éviter de spammer
 
-      time.sleep(0.020) #precise_sleep(20000)  # Attend 20 milliseconde
+      time.sleep(0.010) #precise_sleep(20000)  # Attend 20 milliseconde
 
    #recoit la vitesse et angle et le retourne à ROS via socket
 
